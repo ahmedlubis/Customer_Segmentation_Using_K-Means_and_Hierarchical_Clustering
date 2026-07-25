@@ -1,30 +1,176 @@
-Dataset Overview
-The dataset refers to clients of a wholesale distributor and includes 440 observations with 8 variables: six numerical and two categorical. The numerical variables represent annual spending in monetary units (m.u.) on different product categories:
+# 🛒 Wholesale Customer Segmentation using K-Means Clustering
 
-1. FRESH: Spending on fresh products
-2. MILK: Spending on milk products
-3. GROCERY: Spending on grocery products
-4. FROZEN: Spending on frozen products
-5. DETERGENTS_PAPER: Spending on detergents and paper products
-6. DELICATESSEN: Spending on delicatessen products
+## 📖 Dataset Overview
 
-The categorical variables are:
-1. CHANNEL: Customer channel, either Horeca (Hotel/Restaurant/Café) or Retail
-2. REGION: Customer region, including Lisbon, Oporto, or Other 
+This dataset contains purchasing information from clients of a **wholesale distributor** and is commonly used for customer segmentation and clustering analysis.
 
+The dataset consists of **440 customer observations** with **8 variables**, including **6 numerical features** representing annual spending across product categories and **2 categorical features** describing customer characteristics.
 
-Based on the evaluation table and the explanation provided at the end of this report, here is an explanation of the conclusion reached:  
+---
 
-1. The Final Decision: 4 Clusters is Optimal
-I concluded that dividing the data into 4 clusters provides the most optimal structure. While my initial visual test using 5 clusters showed that some groups overlapped or intersected with each other, dropping it down to 4 clusters provided cleaner, more well-defined boundaries between the segments.
+# 📊 Dataset Variables
 
-2. Understanding the Performance Metrics
-To prove why 4 clusters under the K-Means algorithm was chosen over the Hierarchical Clustering methods (Complete, Average, Single, Ward), this cross-referenced several indices:
-2.1. Calinski-Harabasz Index (Higher is Better): This metric measures how dense these clusters are internally and how well-separated they are from each other.
---> K-Means model scored 131.36.
---> This heavily outperformed the hierarchical techniques, where Ward scored 108.6, Complete scored 38.9, and Average/Single scored 8.38. This proves K-Means created much more distinct boundaries.
-2.2. Silhouette Score (Closer to 1 is Better): This measures how similar an object is to its own cluster compared to other clusters. My Average and Single hierarchical models yielded a strong silhouette score (0.498), but their exceptionally low Calinski-Harabasz scores indicate that they likely created unbalanced or poorly separated group structures overall.
-2.3. Davies-Bouldin Index (Lower is Better): This evaluates the ratio of within-cluster distances to between-cluster distances. My hierarchical Average and Single methods scored very low (0.355), which aligns with their higher Silhouette profiles, but again, failed when considering overall cluster variance and division mapped out by the Calinski-Harabasz score.
+## Numerical Variables
 
-Summary of the Conclusion
-My conclusion effectively justifies choosing K-Means with k=4. It balances physical visual clarity (avoiding the overlaps seen at k=5) with strong statistical performance—specifically yielding the highest structural distance and tightness across all tested clustering frameworks via the Calinski-Harabasz index.  
+The numerical variables represent each customer's **annual spending** (in monetary units) across different product categories.
+
+| Variable | Description |
+|----------|-------------|
+| **FRESH** | Annual spending on fresh products |
+| **MILK** | Annual spending on milk products |
+| **GROCERY** | Annual spending on grocery products |
+| **FROZEN** | Annual spending on frozen products |
+| **DETERGENTS_PAPER** | Annual spending on detergents and paper products |
+| **DELICATESSEN** | Annual spending on delicatessen products |
+
+---
+
+## Categorical Variables
+
+The categorical variables provide additional information about each customer.
+
+| Variable | Description |
+|----------|-------------|
+| **CHANNEL** | Customer type: **Horeca (Hotel, Restaurant, Café)** or **Retail** |
+| **REGION** | Customer location: **Lisbon**, **Oporto**, or **Other** |
+
+---
+
+# 🎯 Objective
+
+The objective of this analysis is to identify natural customer segments based on purchasing behavior using **unsupervised machine learning**, specifically the **K-Means Clustering** algorithm.
+
+The resulting customer groups can be used to support:
+
+- Customer segmentation
+- Targeted marketing strategies
+- Product recommendation
+- Inventory planning
+- Customer relationship management (CRM)
+
+---
+
+# 📈 Clustering Evaluation
+
+Several clustering algorithms were evaluated and compared using multiple cluster validation metrics, including:
+
+- K-Means Clustering
+- Hierarchical Clustering (Complete Linkage)
+- Hierarchical Clustering (Average Linkage)
+- Hierarchical Clustering (Single Linkage)
+- Hierarchical Clustering (Ward Linkage)
+
+The evaluation aimed to determine the clustering method and number of clusters that best represented the underlying customer structure.
+
+---
+
+# 🏆 Optimal Number of Clusters
+
+## K = 4
+
+After comparing multiple clustering configurations, the analysis concludes that **four clusters** provide the most meaningful customer segmentation.
+
+### Interpretation
+
+Initial exploratory visualization using **five clusters (k = 5)** revealed noticeable overlap between several customer groups, making cluster boundaries difficult to interpret.
+
+Reducing the number of clusters to **four** resulted in:
+
+- Better separation between customer segments
+- Reduced overlap
+- More balanced cluster sizes
+- Clearer customer profiles
+
+Overall, **k = 4** provides a more interpretable and statistically robust segmentation.
+
+---
+
+# 📊 Clustering Performance Metrics
+
+Several internal validation metrics were used to compare clustering quality.
+
+---
+
+## 1. Calinski–Harabasz Index
+
+> **Higher values indicate better clustering performance.**
+
+The Calinski–Harabasz Index evaluates how compact individual clusters are while simultaneously measuring the separation between different clusters.
+
+### Results
+
+| Algorithm | Score |
+|-----------|------:|
+| **K-Means** | **131.36** |
+| Ward Linkage | 108.60 |
+| Complete Linkage | 38.90 |
+| Average Linkage | 8.38 |
+| Single Linkage | 8.38 |
+
+### Interpretation
+
+K-Means achieved the **highest Calinski–Harabasz score**, indicating that it produced:
+
+- Highly compact clusters
+- Strong separation between customer groups
+- Better overall cluster structure than all hierarchical methods
+
+---
+
+## 2. Silhouette Score
+
+> **Values closer to 1 indicate better-defined clusters.**
+
+The Silhouette Score measures how similar each observation is to its own cluster compared with neighboring clusters.
+
+### Findings
+
+Average Linkage and Single Linkage produced relatively high Silhouette scores (**0.498**).
+
+### Interpretation
+
+Although these methods showed good local cohesion, their very low Calinski–Harabasz scores suggest that the overall clustering structure remained weak, with poor separation and less balanced clusters.
+
+---
+
+## 3. Davies–Bouldin Index
+
+> **Lower values indicate better clustering performance.**
+
+The Davies–Bouldin Index evaluates the ratio between within-cluster similarity and between-cluster separation.
+
+### Findings
+
+Average Linkage and Single Linkage achieved relatively low scores (**0.355**).
+
+### Interpretation
+
+While these results indicate compact clusters, they do not fully capture overall clustering quality. Combined with their poor Calinski–Harabasz performance, the clusters appear less effective at representing meaningful customer segmentation.
+
+---
+
+# 📝 Key Findings
+
+The comparative evaluation demonstrates that:
+
+- **K-Means** consistently produced the strongest overall clustering performance.
+- **Four clusters (k = 4)** provided clearer and more interpretable customer segments than five clusters.
+- Hierarchical clustering methods showed strengths under individual evaluation metrics but failed to achieve balanced performance across all validation measures.
+- The **Calinski–Harabasz Index** was the primary factor supporting the selection of K-Means, as it demonstrated the best balance between cluster compactness and separation.
+
+---
+
+# 📌 Conclusion
+
+Based on both **visual inspection** and **statistical validation**, **K-Means with four clusters (k = 4)** is the most appropriate clustering solution for this dataset.
+
+The selected model offers:
+
+- Well-separated customer segments
+- Minimal overlap between clusters
+- High internal cohesion
+- Strong overall structural quality
+
+Although some hierarchical clustering methods performed well on individual metrics such as the Silhouette Score and Davies–Bouldin Index, they did not achieve consistently strong performance across all evaluation criteria.
+
+Overall, **K-Means (k = 4)** provides the best balance between interpretability and clustering quality, making it the preferred approach for customer segmentation within this wholesale distribution dataset.
