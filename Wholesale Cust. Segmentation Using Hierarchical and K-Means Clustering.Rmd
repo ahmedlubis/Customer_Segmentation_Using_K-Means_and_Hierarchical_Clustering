@@ -1,0 +1,486 @@
+---
+title: "Wholesale Cust. Segmentation Using Hierarchical and K-Means Clustering"
+author: "AhmedLubis"
+date: "2026-07-30"
+output: github_document
+---
+
+## Preparation ##
+```{r}
+#import_data
+customer_data <- read.csv("wholesale_customers_data.csv")
+
+head(customer_data)
+
+#data_structure
+str(customer_data)
+summary(customer_data)
+
+#data_preparation
+data_cluster <- customer_data[, c(
+  "Fresh",
+  "Milk",
+  "Grocery",
+  "Frozen",
+  "Detergents_Paper",
+  "Delicassen"
+)]
+
+head(data_cluster)
+```
+
+## Exploration ##
+```{r}
+#scatterplot_matrix
+pairs(data_cluster)
+
+#correlation
+cor(data_cluster)
+
+#histogram
+hist(data_cluster$Fresh,
+     main = "Distribusi Fresh",
+     xlab = "Fresh")
+hist(data_cluster$Milk,
+     main = "Distribusi Milk",
+     xlab = "Milk")
+hist(data_cluster$Grocery,
+     main = "Distribusi Grocery",
+     xlab = "Grocery")
+hist(data_cluster$Frozen,
+     main = "Distribusi Frozen",
+     xlab = "Frozen")
+hist(data_cluster$Detergents_Paper,
+     main = "Distribusi Detergents_Paper",
+     xlab = "Detergents_Paper")
+hist(data_cluster$Delicassen,
+     main = "Distribusi Delicassen",
+     xlab = "Delicassen")
+```
+
+It can be seen that every histogram is right-skewed, so i have to transform
+into log-form.
+
+```{r}
+#all_histogram_right-skewed
+#copy_og_data
+data_log <- data_cluster
+#log_transformation-(log_base_e): column 1-6
+data_log[, 1:6] <- log(data_cluster[, 1:6] + 1)
+```
+
+Exploration data_log
+```{r}
+#scatterplot_matrix
+pairs(data_log)
+
+#correlation
+cor(data_log)
+
+#histogram_log_form
+#fresh
+hist(data_log$Fresh,
+     main = "Distribusi Fresh",
+     xlab = "Fresh")
+#milk
+hist(data_log$Milk,
+     main = "Distribusi Milk",
+     xlab = "Milk")
+#grocery
+hist(data_log$Grocery,
+     main = "Distribusi Grocery",
+     xlab = "Grocery")
+#frozen
+hist(data_log$Frozen,
+     main = "Distribusi Frozen",
+     xlab = "Frozen")
+#detergents_paper
+hist(data_log$Detergents_Paper,
+     main = "Distribusi Detergents_Paper",
+     xlab = "Detergents_Paper")
+#delicassen
+hist(data_log$Delicassen,
+     main = "Distribusi Delicasse",
+     xlab = "Delicassen")
+```
+
+After exploration data, i have to do standardization data.
+
+```{r}
+#standardization_data
+data_scaled <- scale(data_log)
+
+head(data_scaled)
+```
+
+Next, the step should be done by me is measuring of distance.
+
+```{r}
+#distance_measurement
+#euclidean_distance
+euclidean_distance <- dist(
+  data_scaled,
+  method = "euclidean"
+)
+
+as.matrix(euclidean_distance)[1:5,1:5]
+#manhattan_distance
+manhattan_distance <- dist(
+  data_scaled,
+  method = "manhattan"
+)
+
+as.matrix(manhattan_distance)[1:5,1:5]
+#chebyshev_distance
+chebyshev_distance <- dist(
+  data_scaled,
+  method = "maximum"
+)
+
+as.matrix(chebyshev_distance)[1:5,1:5]
+```
+
+```{r}
+#based_on_max_spare
+minkowski_distance <- dist(
+  data_scaled,
+  method = "minkowski",
+  p = 3
+)
+
+as.matrix(minkowski_distance)[1:5,1:5]
+```
+
+After measure of distance, I will do cluster analysis.
+
+```{r}
+#hierarchial_clustering
+#complete_linkage
+hc_complete <- hclust(
+  euclidean_distance,
+  method = "complete"
+)
+
+plot(
+  hc_complete,
+  hang = -1,
+  main = "Dendrogram Complete Linkage"
+)
+```
+
+```{r}
+#creating_cluster
+cluster_hc <- cutree(
+  hc_complete,
+  k = 5
+)
+
+cluster_hc
+```
+
+```{r}
+#adding_cluster_to_data
+customer_data$cluster_hc <- cluster_hc
+
+head(customer_data)
+```
+
+```{r}
+#cluster_visualization
+library(factoextra)
+
+fviz_cluster(
+  list(
+    data = data_scaled,
+    cluster = cluster_hc
+  )
+)
+```
+
+```{r}
+library(dplyr)
+
+customer_data%>%
+  group_by(cluster_hc) %>%
+  summarise(
+    Mean_fresh = mean(Fresh),
+    Mean_milk = mean(Milk),
+    Mean_grocery = mean(Grocery),
+    Mean_frozen = mean(Frozen),
+    Mean_detergents_paper = mean(Detergents_Paper),
+    Mean_delicassen = mean(Delicassen)
+  )
+```
+
+```{r}
+#determine_optimal_number_of_cluster
+#elbow_method
+fviz_nbclust(
+  data_scaled,
+  kmeans,
+  method = "wss"
+)
+#silhoutte_method
+fviz_nbclust(
+  data_scaled,
+  kmeans,
+  method = "silhouette"
+)
+```
+
+Next step is k-means clustering. The "k" in k-means represents the number of 
+clusters you want to find. The "means" refers to the average position of all
+the data points within a cluster (the cluster center, or centroid).
+
+```{r}
+#k-means_clsutering
+set.seed(123)
+
+km <- kmeans(
+  data_scaled,
+  centers = 4,
+  nstart = 25
+)
+
+km
+```
+
+```{r}
+fviz_cluster(
+  km,
+  data = data_scaled
+)
+```
+
+```{r}
+#adding_the_result_of_cluster
+customer_data$Cluster_KMeans <- km$cluster
+
+head(customer_data)
+```
+
+```{r}
+#cluster_evaluation
+#calinski-harabasz_index
+library(clusterSim)
+
+index.G1(
+  data_scaled,
+  km$cluster
+)
+#davies-bouldin_index
+index.DB(
+  data_scaled,
+  km$cluster
+)$DB
+```
+
+```{r}
+#comparison_clustering_model
+# Complete linkage
+hc_complete <- hclust(
+  euclidean_distance,
+  method = "complete"
+)
+
+# Average linkage
+hc_average <- hclust(
+  euclidean_distance,
+  method = "average"
+)
+
+# Single linkage
+hc_single <- hclust(
+  euclidean_distance,
+  method = "single"
+)
+
+# Ward linkage
+hc_ward <- hclust(
+  euclidean_distance,
+  method = "ward.D2"
+)
+```
+
+```{r}
+#comparison_4clusters
+cluster_complete <- cutree(hc_complete, k = 4)
+
+cluster_average <- cutree(hc_average, k = 4)
+
+cluster_single <- cutree(hc_single, k = 4)
+
+cluster_ward <- cutree(hc_ward, k = 4)
+```
+
+Final step, I have to do some evaluations.
+
+```{r}
+#evaluated_by_silhouette_index
+library(cluster)
+
+sil_complete <- silhouette(
+  cluster_complete,
+  euclidean_distance
+)
+
+sil_average <- silhouette(
+  cluster_average,
+  euclidean_distance
+)
+
+sil_single <- silhouette(
+  cluster_single,
+  euclidean_distance
+)
+
+sil_ward <- silhouette(
+  cluster_ward,
+  euclidean_distance
+)
+
+mean_complete <- mean(sil_complete[,3])
+
+mean_average <- mean(sil_average[,3])
+
+mean_single <- mean(sil_single[,3])
+
+mean_ward <- mean(sil_ward[,3])
+
+mean_complete
+
+mean_average
+
+mean_single
+
+mean_ward
+```
+
+```{r}
+#evaluated_by_davies-bouldin_index
+library(clusterSim)
+
+db_complete <- index.DB(
+  data_scaled,
+  cluster_complete
+)$DB
+
+db_average <- index.DB(
+  data_scaled,
+  cluster_average
+)$DB
+
+db_single <- index.DB(
+  data_scaled,
+  cluster_single
+)$DB
+
+db_ward <- index.DB(
+  data_scaled,
+  cluster_ward
+)$DB
+
+db_complete
+
+db_average
+
+db_single
+
+db_ward
+```
+
+```{r}
+#evaluated_by_calinski-harabasz_index
+ch_complete <- index.G1(
+  data_scaled,
+  cluster_complete
+)
+
+ch_average <- index.G1(
+  data_scaled,
+  cluster_average
+)
+
+ch_single <- index.G1(
+  data_scaled,
+  cluster_single
+)
+
+ch_ward <- index.G1(
+  data_scaled,
+  cluster_ward
+)
+
+ch_complete
+
+ch_average
+
+ch_single
+
+ch_ward
+```
+
+```{r}
+#resume_comparison_model
+compared_result <- data.frame(
+  Metode = c(
+    "Complete",
+    "Average",
+    "Single",
+    "Ward"
+  ),
+
+  Silhouette = c(
+    mean_complete,
+    mean_average,
+    mean_single,
+    mean_ward
+  ),
+
+  Davies_Bouldin = c(
+    db_complete,
+    db_average,
+    db_single,
+    db_ward
+  ),
+
+  Calinski_Harabasz = c(
+    ch_complete,
+    ch_average,
+    ch_single,
+    ch_ward
+  )
+)
+
+compared_result
+```
+
+### **Determining the Optimal Number of Clusters**
+
+Based on the evaluation results, the optimal clustering model is **K-Means with $k = 4$**. 
+
+#### **Key Supporting Factors**
+
+1. **Elbow & Silhouette Methods ($k = 4$ vs $k = 5$)**
+   * Visual evaluation using `fviz_nbclust` showed cluster overlap at $k = 5$. 
+   * Setting **$k = 4$** eliminated overlapping, yielding better-separated groups.
+
+2. **Superior Cluster Separation (Calinski-Harabasz Index)**
+   * K-Means ($k = 4$) achieved a **Calinski-Harabasz score of 131.36**.
+   * Outperformed all tested hierarchical methods:
+     * **K-Means ($k=4$):** `131.36` *(Highest)*
+     * **Ward's:** `108.60`
+     * **Complete:** `38.90`
+     * **Average:** `8.30`
+
+3. **Davies-Bouldin Index & Model Stability**
+   * K-Means ($k = 4$) achieved a **Davies-Bouldin Index of 1.69**.
+   * Although Average Linkage scored lower (0.35), it suffered from severe cluster imbalance/chaining effect.
+
+4. **Balanced Cluster Distribution**
+   * K-Means ($k = 4$) produced well-balanced cluster sizes: **130, 61, 119, and 130**.
+   * Avoided single-cluster dominance seen in Average/Single linkage, making the segments practical for business interpretation.
+
+---
+
+> **Conclusion:** **K-Means ($k = 4$)** is selected as the optimal model because it provides the highest internal validity score (Calinski-Harabasz) and the most stable, balanced cluster structure.
